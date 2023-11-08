@@ -30,15 +30,16 @@ class HueMixin:
     """
     Class container for hue-setter code shared across all plots that support hue.
     """
+
     def set_hue_values(
-        self, color_kwarg='color', default_color='steelblue', supports_categorical=True
+        self, color_kwarg="color", default_color="steelblue", supports_categorical=True
     ):
-        hue = self.kwargs.pop('hue', None)
-        cmap = self.kwargs.pop('cmap', 'viridis')
-        norm = self.kwargs.pop('norm', None)
+        hue = self.kwargs.pop("hue", None)
+        cmap = self.kwargs.pop("cmap", "viridis")
+        norm = self.kwargs.pop("norm", None)
 
         if supports_categorical:
-            scheme = self.kwargs.pop('scheme')
+            scheme = self.kwargs.pop("scheme")
         else:
             scheme = None
 
@@ -55,8 +56,8 @@ class HueMixin:
         if hue is not None and hue.isnull().any():
             warnings.warn(
                 'The data being passed to "hue" includes null values. You '
-                'probably want to remove these before plotting this data '
-                'with geoplot.'
+                "probably want to remove these before plotting this data "
+                "with geoplot."
             )
         if hue is None:  # no colormap
             color = self.kwargs.pop(color_kwarg, default_color)
@@ -64,7 +65,9 @@ class HueMixin:
             categories = None
             self.k = None
             mpl_cm_scalar_mappable = None
-        elif ((scheme == 'categorical') or (scheme is None and hue.dtype == np.dtype('object'))):
+        elif (scheme == "categorical") or (
+            scheme is None and hue.dtype == np.dtype("object")
+        ):
             categories = np.unique(hue)
             value_map = {v: i for i, v in enumerate(categories)}
             values = [value_map[d] for d in hue]
@@ -89,10 +92,10 @@ class HueMixin:
 
                     scheme = getattr(mc, scheme)(hue)
                 except AttributeError:
-                    opts = tuple(list(mc.CLASSIFIERS) + ['Categorical'])
+                    opts = tuple(list(mc.CLASSIFIERS) + ["Categorical"])
                     raise ValueError(
-                        f'Invalid scheme {scheme!r}. If specified as a string, scheme must be one '
-                        f'of {opts}.'
+                        f"Invalid scheme {scheme!r}. If specified as a string, scheme must be one "
+                        f"of {opts}."
                     )
             self.k = len(scheme.bins)
 
@@ -102,7 +105,7 @@ class HueMixin:
             values = scheme(hue)
             binedges = [scheme.yb.min()] + scheme.bins.tolist()
             categories = [
-                '{0:g} - {1:g}'.format(binedges[i], binedges[i + 1])
+                "{0:g} - {1:g}".format(binedges[i], binedges[i + 1])
                 for i in range(len(binedges) - 1)
             ]
             colors = [mpl_cm_scalar_mappable.to_rgba(v) for v in values]
@@ -130,10 +133,11 @@ class ScaleMixin:
     """
     Class container for scale-setter code shared across all plots that support scale.
     """
+
     def set_scale_values(self, size_kwarg=None, default_size=20):
-        self.limits = self.kwargs.pop('limits')
-        self.scale_func = self.kwargs.pop('scale_func')
-        self.scale = self.kwargs.pop('scale')
+        self.limits = self.kwargs.pop("limits")
+        self.scale_func = self.kwargs.pop("scale_func")
+        self.scale = self.kwargs.pop("scale")
         self.scale = _to_geoseries(self.df, self.scale, "scale")
 
         if self.scale is not None:
@@ -163,7 +167,7 @@ class ScaleMixin:
             self.sizes = np.array(self.sizes)[sorted_indices]
             self.df = self.df.iloc[sorted_indices]
 
-            if hasattr(self, 'colors') and self.colors is not None:
+            if hasattr(self, "colors") and self.colors is not None:
                 self.colors = np.array(self.colors)[sorted_indices]
 
         else:
@@ -181,11 +185,12 @@ class LegendMixin:
     """
     Class container for legend-builder code shared across all plots that support legend.
     """
+
     def paint_legend(self, supports_hue=True, supports_scale=False, scale_multiplier=1):
-        legend = self.kwargs.pop('legend', None)
-        legend_labels = self.kwargs.pop('legend_labels', None)
-        legend_values = self.kwargs.pop('legend_values', None)
-        legend_kwargs = self.kwargs.pop('legend_kwargs', None)
+        legend = self.kwargs.pop("legend", None)
+        legend_labels = self.kwargs.pop("legend_labels", None)
+        legend_values = self.kwargs.pop("legend_values", None)
+        legend_kwargs = self.kwargs.pop("legend_kwargs", None)
         legend_marker_kwargs = dict()
         if legend_kwargs is None:
             legend_kwargs = dict()
@@ -193,7 +198,7 @@ class LegendMixin:
             for kwarg in list(legend_kwargs.keys()):
                 # as a power user feature, certain marker* parameters can be passed along to the
                 # Line2D markers in the patch legend
-                if kwarg[:6] == 'marker':
+                if kwarg[:6] == "marker":
                     legend_marker_kwargs[kwarg] = legend_kwargs.pop(kwarg)
 
         if legend and (
@@ -202,10 +207,11 @@ class LegendMixin:
         ):
             raise ValueError(
                 '"legend" is set to True, but the plot has neither a "hue" nor a "scale" '
-                'variable.'
+                "variable."
             )
         if not legend and (
-            legend_labels is not None or legend_values is not None
+            legend_labels is not None
+            or legend_values is not None
             or legend_kwargs != dict()
         ):
             raise ValueError(
@@ -213,15 +219,16 @@ class LegendMixin:
                 'when "legend" is set to False.'
             )
         if (
-            legend_labels is not None and legend_values is not None
+            legend_labels is not None
+            and legend_values is not None
             and len(legend_labels) != len(legend_values)
         ):
             raise ValueError(
                 'The "legend_labels" and "legend_values" parameters have different lengths.'
             )
-        if (not legend and (
-            'legend_var' in self.kwargs and self.kwargs['legend_var'] is not None
-        )):
+        if not legend and (
+            "legend_var" in self.kwargs and self.kwargs["legend_var"] is not None
+        ):
             raise ValueError(
                 'Cannot specify "legend_labels", "legend_values", or "legend_kwargs" '
                 'when "legend" is set to False.'
@@ -229,109 +236,121 @@ class LegendMixin:
 
         # Mutate matplotlib defaults
         addtl_legend_kwargs = dict()
-        addtl_legend_kwargs['fancybox'] = legend_kwargs.pop('fancybox', True)
+        addtl_legend_kwargs["fancybox"] = legend_kwargs.pop("fancybox", True)
 
         if supports_hue and supports_scale:
-            if self.kwargs['legend_var'] is not None:
-                legend_var = self.kwargs['legend_var']
-                if legend_var not in ['scale', 'hue']:
+            if self.kwargs["legend_var"] is not None:
+                legend_var = self.kwargs["legend_var"]
+                if legend_var not in ["scale", "hue"]:
                     raise ValueError(
                         '"legend_var", if specified, must be set to one of "hue" or "scale".'
                     )
                 elif getattr(self, legend_var) is None:
                     raise ValueError(
                         f'"legend_var" is set to "{legend_var!r}", but "{legend_var!r}" is '
-                        f'unspecified.'
+                        f"unspecified."
                     )
             else:
                 if legend and self.hue is not None and self.scale is not None:
                     warnings.warn(
                         'Please specify "legend_var" explicitly when both "hue" and "scale" are '
-                        'specified. Defaulting to "legend_var=\'hue\'".'
+                        "specified. Defaulting to \"legend_var='hue'\"."
                     )
-                legend_var = 'hue' if self.hue is not None else 'scale'
-            self.kwargs.pop('legend_var')
+                legend_var = "hue" if self.hue is not None else "scale"
+            self.kwargs.pop("legend_var")
         else:
-            legend_var = 'hue'
+            legend_var = "hue"
 
-        if legend and legend_var == 'hue':
+        if legend and legend_var == "hue":
             if self.k is not None:
                 # If the user provides a markeredgecolor in legend_kwargs, use that. Otherwise,
                 # if they provide an edgecolor in kwargs, reuse that. Otherwise, default to a
                 # transparent markeredgecolor.
-                if 'markeredgecolor' in legend_marker_kwargs:
-                    markeredgecolor = legend_marker_kwargs.pop('markeredgecolor')
-                elif 'edgecolor' in self.kwargs:
-                    markeredgecolor = self.kwargs.get('edgecolor')
+                if "markeredgecolor" in legend_marker_kwargs:
+                    markeredgecolor = legend_marker_kwargs.pop("markeredgecolor")
+                elif "edgecolor" in self.kwargs:
+                    markeredgecolor = self.kwargs.get("edgecolor")
                 else:
-                    markeredgecolor = 'None'
+                    markeredgecolor = "None"
 
                 # If the user provides a markerfacecolor in legend_kwargs, but the legend is in
                 # hue mode, raise an error, as setting this markerfacecolor would invalidate the
                 # utility of the legend.
-                if 'markerfacecolor' in legend_marker_kwargs:
+                if "markerfacecolor" in legend_marker_kwargs:
                     raise ValueError(
                         'Cannot set a "markerfacecolor" when the "legend_var" is set to "hue". '
-                        'Doing so would remove the color reference, rendering the legend '
+                        "Doing so would remove the color reference, rendering the legend "
                         'useless. Are you sure you didn\'t mean to set "markeredgecolor" instead?'
                     )
 
                 marker_kwargs = {
-                    'marker': "o", 'markersize': 10, 'markeredgecolor': markeredgecolor
+                    "marker": "o",
+                    "markersize": 10,
+                    "markeredgecolor": markeredgecolor,
                 }
                 marker_kwargs.update(legend_marker_kwargs)
 
                 if legend_values is None:
-                    markerfacecolors = [self.mpl_cm_scalar_mappable.to_rgba(value) for (value, _)
-                                        in enumerate(self.categories)]
+                    markerfacecolors = [
+                        self.mpl_cm_scalar_mappable.to_rgba(value)
+                        for (value, _) in enumerate(self.categories)
+                    ]
                 else:
-                    markerfacecolors = [self.mpl_cm_scalar_mappable.to_rgba(value) for value in legend_values]
+                    markerfacecolors = [
+                        self.mpl_cm_scalar_mappable.to_rgba(value)
+                        for value in legend_values
+                    ]
 
                 patches = []
                 for markerfacecolor in markerfacecolors:
                     patches.append(
                         mpl.lines.Line2D(
-                            [0], [0], linestyle='None',
+                            [0],
+                            [0],
+                            linestyle="None",
                             markerfacecolor=markerfacecolor,
-                            **marker_kwargs
+                            **marker_kwargs,
                         )
                     )
                 if legend_labels:
                     if len(patches) != len(legend_labels):
                         raise ValueError(
-                            f'The list of legend values is length {len(patches)}, but the list of '
-                            f'legend_labels is length {len(legend_labels)}.'
+                            f"The list of legend values is length {len(patches)}, but the list of "
+                            f"legend_labels is length {len(legend_labels)}."
                         )
                 else:
                     legend_labels = self.categories
                 try:
                     self.ax.legend(
-                        patches, legend_labels, numpoints=1,
-                        **legend_kwargs, **addtl_legend_kwargs
+                        patches,
+                        legend_labels,
+                        numpoints=1,
+                        **legend_kwargs,
+                        **addtl_legend_kwargs,
                     )
                 except TypeError:
                     raise ValueError(
-                        'The plot is in categorical legend mode, implying a '
+                        "The plot is in categorical legend mode, implying a "
                         '"matplotlib.legend.Legend" legend object. However, "legend_kwarg" '
-                        'contains unexpected keyword arguments not supported by this legend type.'
-                        ' Are you sure you are not accidentally passing continuous '
+                        "contains unexpected keyword arguments not supported by this legend type."
+                        " Are you sure you are not accidentally passing continuous "
                         '"matplotlib.colorbar.Colorbar" legend parameters instead?'
-                        '\n\n'
-                        'For a reference on the valid keyword parameters, see the Matplotlib '
-                        'documentation at '
-                        'https://matplotlib.org/stable/api/legend_api.html#'
-                        'matplotlib.legend.Legend. To learn more about the difference '
-                        'between these two legend modes, refer to the geoplot documentation '
-                        'at https://residentmario.github.io/geoplot/user_guide/'
-                        'Customizing_Plots.html#legend.'
+                        "\n\n"
+                        "For a reference on the valid keyword parameters, see the Matplotlib "
+                        "documentation at "
+                        "https://matplotlib.org/stable/api/legend_api.html#"
+                        "matplotlib.legend.Legend. To learn more about the difference "
+                        "between these two legend modes, refer to the geoplot documentation "
+                        "at https://residentmario.github.io/geoplot/user_guide/"
+                        "Customizing_Plots.html#legend."
                     )
 
             else:  # self.k is None
                 if len(legend_marker_kwargs) > 0:
                     raise ValueError(
                         '"k" is set to "None", implying a colorbar legend, but "legend_kwargs" '
-                        'includes marker parameters that can only be applied to a patch legend. '
-                        'Remove these parameters or convert to a categorical colormap by '
+                        "includes marker parameters that can only be applied to a patch legend. "
+                        "Remove these parameters or convert to a categorical colormap by "
                         'specifying a "k" value.'
                     )
 
@@ -340,30 +359,32 @@ class LegendMixin:
                     raise NotImplementedError(
                         '"k" is set to "None", implying a colorbar legend, but "legend_labels" '
                         'and/or "legend_values" are also specified. These parameters do not '
-                        'apply in the case of a colorbar legend and should be removed.'
+                        "apply in the case of a colorbar legend and should be removed."
                     )
 
                 self.mpl_cm_scalar_mappable.set_array(self.hue)
                 try:
-                    plt.gcf().colorbar(self.mpl_cm_scalar_mappable, ax=self.ax, **legend_kwargs)
+                    plt.gcf().colorbar(
+                        self.mpl_cm_scalar_mappable, ax=self.ax, **legend_kwargs
+                    )
                 except TypeError:
                     raise ValueError(
-                        'The plot is in continuous legend mode, implying a '
+                        "The plot is in continuous legend mode, implying a "
                         '"matplotlib.colorbar.Colorbar" legend object. However, "legend_kwarg" '
-                        'contains unexpected keyword arguments not supported by this legend type.'
-                        ' Are you sure you are not accidentally passing categorical '
+                        "contains unexpected keyword arguments not supported by this legend type."
+                        " Are you sure you are not accidentally passing categorical "
                         '"matplotlib.legend.Legend" legend parameters instead?'
-                        '\n\n'
-                        'For a reference on the valid keyword parameters, see the Matplotlib '
-                        'documentation at '
-                        'https://matplotlib.org/stable/api/colorbar_api.html#'
-                        'matplotlib.colorbar.Colorbar. To learn more about the difference '
-                        'between these two legend modes, refer to the geoplot documentation '
-                        'at https://residentmario.github.io/geoplot/user_guide/'
-                        'Customizing_Plots.html#legend.'
+                        "\n\n"
+                        "For a reference on the valid keyword parameters, see the Matplotlib "
+                        "documentation at "
+                        "https://matplotlib.org/stable/api/colorbar_api.html#"
+                        "matplotlib.colorbar.Colorbar. To learn more about the difference "
+                        "between these two legend modes, refer to the geoplot documentation "
+                        "at https://residentmario.github.io/geoplot/user_guide/"
+                        "Customizing_Plots.html#legend."
                     )
 
-        elif legend and legend_var == 'scale':
+        elif legend and legend_var == "scale":
             if legend_values is None:
                 # If the user doesn't specify their own legend_values, apply a reasonable
                 # default: a five-point linear array from max to min. The sort order (max to min,
@@ -379,12 +400,15 @@ class LegendMixin:
                 # is locked to ascending, so for consistency across the API we use ascending order
                 # in this case as well.
                 legend_values = np.linspace(
-                    np.max(self.scale), np.min(self.scale), num=5, dtype=self.scale.dtype
+                    np.max(self.scale),
+                    np.min(self.scale),
+                    num=5,
+                    dtype=self.scale.dtype,
                 )[::-1]
             if legend_labels is None:
                 # If the user doesn't specify their own legend_labels, apply a reasonable
                 # default: the 'g' f-string for the given input value.
-                legend_labels = ['{0:g}'.format(value) for value in legend_values]
+                legend_labels = ["{0:g}".format(value) for value in legend_values]
 
             # If the user specifies a markerfacecolor explicitly via legend_params, use that.
             #
@@ -395,61 +419,65 @@ class LegendMixin:
             # the corresponding plot color value. This is controlled by self.colors and, in the
             # case where hue is None, will be an n-length list of the same color value or name, so
             # we can grab that by taking the first element of self.colors.
-            if 'markerfacecolor' in legend_marker_kwargs:
-                markerfacecolors = [legend_marker_kwargs['markerfacecolor']] * len(legend_values)
-                legend_marker_kwargs.pop('markerfacecolor')
+            if "markerfacecolor" in legend_marker_kwargs:
+                markerfacecolors = [legend_marker_kwargs["markerfacecolor"]] * len(
+                    legend_values
+                )
+                legend_marker_kwargs.pop("markerfacecolor")
             elif self.hue is None:
                 markerfacecolors = [self.colors[0]] * len(legend_values)
             else:
-                markerfacecolors = ['None'] * len(legend_values)
+                markerfacecolors = ["None"] * len(legend_values)
 
             markersizes = [self.dscale(d) * scale_multiplier for d in legend_values]
 
             # If the user provides a markeredgecolor in legend_kwargs, use that. Otherwise, default
             # to a steelblue or black markeredgecolor, depending on whether hue is defined.
-            if 'markeredgecolor' in legend_marker_kwargs:
-                markeredgecolor = legend_marker_kwargs.pop('markeredgecolor')
+            if "markeredgecolor" in legend_marker_kwargs:
+                markeredgecolor = legend_marker_kwargs.pop("markeredgecolor")
             elif self.hue is None:
-                markeredgecolor = 'steelblue'
+                markeredgecolor = "steelblue"
             else:
-                markeredgecolor = 'black'
+                markeredgecolor = "black"
 
             # If the user provides a markersize in legend_kwargs, but the legend is in
             # scale mode, raise an error, as setting this markersize would invalidate the
             # utility of the legend.
-            if 'markersize' in legend_marker_kwargs:
+            if "markersize" in legend_marker_kwargs:
                 raise ValueError(
                     'Cannot set a "markersize" when the "legend_var" is set to "scale". '
-                    'Doing so would remove the scale reference, rendering the legend '
-                    'useless.'
+                    "Doing so would remove the scale reference, rendering the legend "
+                    "useless."
                 )
 
-            marker_kwargs = {
-                'marker': "o", 'markeredgecolor': markeredgecolor
-            }
+            marker_kwargs = {"marker": "o", "markeredgecolor": markeredgecolor}
             marker_kwargs.update(legend_marker_kwargs)
 
             patches = []
-            for markerfacecolor, markersize in zip(
-                markerfacecolors, markersizes
-            ):
+            for markerfacecolor, markersize in zip(markerfacecolors, markersizes):
                 patches.append(
                     mpl.lines.Line2D(
-                        [0], [0], linestyle='None',
+                        [0],
+                        [0],
+                        linestyle="None",
                         markersize=markersize,
                         markerfacecolor=markerfacecolor,
-                        **marker_kwargs
+                        **marker_kwargs,
                     )
                 )
 
             if len(patches) != len(legend_labels):
                 raise ValueError(
-                    f'The list of legend values is length {len(patches)}, but the list of '
-                    f'legend_labels is length {len(legend_labels)}.'
+                    f"The list of legend values is length {len(patches)}, but the list of "
+                    f"legend_labels is length {len(legend_labels)}."
                 )
 
             self.ax.legend(
-                patches, legend_labels, numpoints=1, **legend_kwargs, **addtl_legend_kwargs
+                patches,
+                legend_labels,
+                numpoints=1,
+                **legend_kwargs,
+                **addtl_legend_kwargs,
             )
 
 
@@ -468,21 +496,20 @@ class ClipMixin:
     KDEPlot uses the first method because it relies on `seaborn` underneath, and there is no way
     to clip an existing Axes painter (that I am aware of). All other plots use the second method.
     """
+
     def set_clip(self, gdf):
-        clip = self.kwargs.pop('clip')
+        clip = self.kwargs.pop("clip")
         clip = _to_geom_geoseries(gdf, clip, "clip")
 
         if clip is not None:
             clip_shp = clip.unary_union
-            gdf = gdf.assign(
-                geometry=gdf.geometry.intersection(clip_shp)
-            )
+            gdf = gdf.assign(geometry=gdf.geometry.intersection(clip_shp))
             null_geoms = gdf.geometry.isnull()
             # Clipping may result in null geometries. We warn about this here, but it is = the
             # responsibility of the plot draw procedure to perform the actual plot exclusion.
             if null_geoms.any():
                 warnings.warn(
-                    f'The input data contains {null_geoms.sum()} data points that do not '
+                    f"The input data contains {null_geoms.sum()} data points that do not "
                     f'intersect with "clip". These data points will not appear in the plot.'
                 )
         return gdf
@@ -501,7 +528,7 @@ class ClipMixin:
         return rect
 
     def paint_clip(self):
-        clip = self.kwargs.pop('clip')
+        clip = self.kwargs.pop("clip")
         clip = _to_geom_geoseries(self.df, clip, "clip")
         if clip is not None:
             if self.projection is not None:
@@ -518,8 +545,12 @@ class ClipMixin:
                 xmin, xmax = self.ax.get_xlim()
                 ymin, ymax = self.ax.get_ylim()
                 polyplot(
-                    gpd.GeoSeries(clip_geom), facecolor='white', linewidth=0, zorder=2,
-                    extent=extent, ax=self.ax
+                    gpd.GeoSeries(clip_geom),
+                    facecolor="white",
+                    linewidth=0,
+                    zorder=2,
+                    extent=extent,
+                    ax=self.ax,
                 )
 
 
@@ -527,10 +558,11 @@ class QuadtreeComputeMixin:
     """
     Class container for computing a quadtree.
     """
+
     def compute_quadtree(self):
-        nmin = self.kwargs.pop('nmin')
-        nmax = self.kwargs.pop('nmax')
-        hue = self.kwargs.get('hue', None)
+        nmin = self.kwargs.pop("nmin")
+        nmax = self.kwargs.pop("nmax")
+        hue = self.kwargs.get("hue", None)
 
         df = gpd.GeoDataFrame(self.df, geometry=self.df.geometry)
         hue = _to_geoseries(df, hue, "hue")
@@ -559,9 +591,10 @@ class QuadtreeHueMixin(HueMixin):
     """
     Subclass of HueMixin that provides modified hue-setting code for the quadtree plot.
     """
+
     def set_hue_values(self, color_kwarg, default_color):
-        agg = self.kwargs.pop('agg')
-        nsig = self.kwargs.pop('nsig')
+        agg = self.kwargs.pop("agg")
+        nsig = self.kwargs.pop("nsig")
         _df = self.df
         dvals = []
 
@@ -572,7 +605,7 @@ class QuadtreeHueMixin(HueMixin):
         # over self.partitions, but set_hue_values is called on self.df. So we temporarily swap
         # self.df out for the map on self.partitions, run set_hue_values, then swap the original
         # GeoDataFrame back into place. We apply the nsig adjustment afterwards.
-        has_hue = 'hue' in self.kwargs and self.kwargs['hue'] is not None
+        has_hue = "hue" in self.kwargs and self.kwargs["hue"] is not None
         if has_hue:
             for p in self.partitions:
                 if len(p.data) == 0:  # empty
@@ -581,23 +614,21 @@ class QuadtreeHueMixin(HueMixin):
                     dval = agg(p.data.hue_col)
                 dvals.append(dval)
 
-            self.df = pd.DataFrame({
-                self.kwargs['hue']: dvals
-            })
-            super().set_hue_values(color_kwarg='facecolor', default_color='None')
+            self.df = pd.DataFrame({self.kwargs["hue"]: dvals})
+            super().set_hue_values(color_kwarg="facecolor", default_color="None")
             self.df = _df
 
             # apply the special nsig parameter colormap rule
             for i, dval in enumerate(dvals):
                 if dval < nsig:
-                    self.colors[i] = 'None'
+                    self.colors[i] = "None"
         else:
-            super().set_hue_values(color_kwarg='facecolor', default_color='None')
+            super().set_hue_values(color_kwarg="facecolor", default_color="None")
 
 
 class Plot:
     def __init__(self, df, **kwargs):
-        if not hasattr(df, 'geometry'):
+        if not hasattr(df, "geometry"):
             # The two valid df types are GeoDataFrame and GeoSeries. The former may be missing
             # a geometry column, depending on how it was initialized. The latter always returns
             # self when it is asked for its geometry property, and so it will never be the source
@@ -607,29 +638,28 @@ class Plot:
             )
         self.df = df
 
-        if kwargs['ax'] is None:
+        if kwargs["ax"] is None:
             # a default figsize is always set and passed into the initializer
-            self.figsize = kwargs.pop('figsize')
+            self.figsize = kwargs.pop("figsize")
         else:
-            if kwargs['figsize'] != (8, 6):  # non-default user setting
+            if kwargs["figsize"] != (8, 6):  # non-default user setting
                 warnings.warn(
                     'Cannot set "figsize" when passing an "ax" to the plot. To remove this '
                     'warning omit the "figsize" parameter.'
                 )
                 pass
 
-            self.figsize = tuple(kwargs['ax'].get_figure().get_size_inches())
-            kwargs.pop('figsize')
+            self.figsize = tuple(kwargs["ax"].get_figure().get_size_inches())
+            kwargs.pop("figsize")
 
-        self.ax = kwargs.pop('ax')
-        self.extent = kwargs.pop('extent')
-        self.projection = kwargs.pop('projection')
+        self.ax = kwargs.pop("ax")
+        self.extent = kwargs.pop("extent")
+        self.projection = kwargs.pop("projection")
         # TODO: init_axes() -> init_axes(ax)
         self.init_axes()
         self.kwargs = kwargs
 
     def init_axes(self):
-
         if not self.ax:
             plt.figure(figsize=self.figsize)
 
@@ -647,16 +677,21 @@ class Plot:
             extrema = relax_bounds(xmin, ymin, xmax, ymax)
 
         extent = pd.Series(self.extent) if self.extent is not None else None
-        central_longitude = np.mean(extent[[0, 2]]) if extent is not None\
-            else np.mean(extrema[[0, 2]])
-        central_latitude = np.mean(extent[[1, 3]]) if extent is not None\
-            else np.mean(extrema[[1, 3]])
+        central_longitude = (
+            np.mean(extent[[0, 2]]) if extent is not None else np.mean(extrema[[0, 2]])
+        )
+        central_latitude = (
+            np.mean(extent[[1, 3]]) if extent is not None else np.mean(extrema[[1, 3]])
+        )
 
         if self.projection:
-            self.projection = self.projection.load(self.df, {
-                'central_longitude': central_longitude,
-                'central_latitude': central_latitude
-            })
+            self.projection = self.projection.load(
+                self.df,
+                {
+                    "central_longitude": central_longitude,
+                    "central_latitude": central_latitude,
+                },
+            )
 
             if self.ax is None:
                 ax = plt.subplot(111, projection=self.projection)
@@ -672,17 +707,17 @@ class Plot:
             if isinstance(ax, GeoAxesSubplot):
                 self.projection = ax.projection
             else:
-                ax.set_aspect('equal')
+                ax.set_aspect("equal")
 
         if len(self.df.geometry) != 0:
             xmin, ymin, xmax, ymax = extent if extent is not None else extrema
 
             if xmin < -180 or xmax > 180 or ymin < -90 or ymax > 90:
                 raise ValueError(
-                    'geoplot expects input geometries to be in latitude-longitude coordinates, '
-                    'but the values provided include points whose values exceed the maximum '
-                    'or minimum possible longitude or latitude values (-180, -90, 180, 90), '
-                    'indicating that the input data is not in proper latitude-longitude format.'
+                    "geoplot expects input geometries to be in latitude-longitude coordinates, "
+                    "but the values provided include points whose values exceed the maximum "
+                    "or minimum possible longitude or latitude values (-180, -90, 180, 90), "
+                    "indicating that the input data is not in proper latitude-longitude format."
                 )
 
             if self.projection is not None:
@@ -701,18 +736,18 @@ class Plot:
                     # we will follow in failure cases.
                     if isinstance(self.projection, ccrs.Orthographic):
                         warnings.warn(
-                            'Plot extent lies outside of the Orthographic projection\'s '
-                            'viewport. Defaulting to global extent.'
+                            "Plot extent lies outside of the Orthographic projection's "
+                            "viewport. Defaulting to global extent."
                         )
                     else:
                         warnings.warn(
-                            'Could not set plot extent successfully due to numerical instability. '
-                            'Try setting extent manually. Defaulting to a global extent.'
+                            "Could not set plot extent successfully due to numerical instability. "
+                            "Try setting extent manually. Defaulting to a global extent."
                         )
 
                 try:
                     # Cartopy 0.18+
-                    outline = ax.spines['geo']
+                    outline = ax.spines["geo"]
                 except KeyError:
                     outline = ax.outline_patch
                 outline.set_visible(False)
@@ -725,11 +760,24 @@ class Plot:
 
 
 def pointplot(
-    df, projection=None,
-    hue=None, cmap=None, norm=None, scheme=None,
-    scale=None, limits=(1, 5), scale_func=None,
-    legend=False, legend_var=None, legend_values=None, legend_labels=None, legend_kwargs=None,
-    figsize=(8, 6), extent=None, ax=None, **kwargs
+    df,
+    projection=None,
+    hue=None,
+    cmap=None,
+    norm=None,
+    scheme=None,
+    scale=None,
+    limits=(1, 5),
+    scale_func=None,
+    legend=False,
+    legend_var=None,
+    legend_values=None,
+    legend_labels=None,
+    legend_kwargs=None,
+    figsize=(8, 6),
+    extent=None,
+    ax=None,
+    **kwargs,
 ):
     """
     A geospatial scatter plot.
@@ -791,11 +839,12 @@ def pointplot(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class PointPlot(Plot, HueMixin, ScaleMixin, LegendMixin):
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
-            self.set_hue_values(color_kwarg='color', default_color='steelblue')
-            self.set_scale_values(size_kwarg='s', default_size=5)
+            self.set_hue_values(color_kwarg="color", default_color="steelblue")
+            self.set_scale_values(size_kwarg="s", default_size=5)
             self.paint_legend(supports_hue=True, supports_scale=True)
 
         def draw(self):
@@ -807,24 +856,41 @@ def pointplot(
             ys = np.array([p.y for p in plot.df.geometry])
             if self.projection:
                 ax.scatter(
-                    xs, ys, transform=ccrs.PlateCarree(), c=plot.colors,
+                    xs,
+                    ys,
+                    transform=ccrs.PlateCarree(),
+                    c=plot.colors,
                     # the ax.scatter 's' param is an area but the API is unified on width in pixels
                     # (or "points"), so we have to square the value at draw time to get the correct
                     # point size.
                     s=[s**2 for s in plot.sizes],
-                    **plot.kwargs
+                    **plot.kwargs,
                 )
             else:
-                ax.scatter(xs, ys, c=plot.colors, s=[s**2 for s in plot.sizes], **plot.kwargs)
+                ax.scatter(
+                    xs, ys, c=plot.colors, s=[s**2 for s in plot.sizes], **plot.kwargs
+                )
             return ax
 
     plot = PointPlot(
-        df, figsize=figsize, ax=ax, extent=extent, projection=projection,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        scale=scale, limits=limits, scale_func=scale_func,
-        legend=legend, legend_var=legend_var, legend_values=legend_values,
-        legend_labels=legend_labels, legend_kwargs=legend_kwargs,
-        **kwargs
+        df,
+        figsize=figsize,
+        ax=ax,
+        extent=extent,
+        projection=projection,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        scale=scale,
+        limits=limits,
+        scale_func=scale_func,
+        legend=legend,
+        legend_var=legend_var,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
+        legend_kwargs=legend_kwargs,
+        **kwargs,
     )
     return plot.draw()
 
@@ -857,6 +923,7 @@ def polyplot(df, projection=None, extent=None, figsize=(8, 6), ax=None, **kwargs
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class PolyPlot(Plot):
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
@@ -866,46 +933,67 @@ def polyplot(df, projection=None, extent=None, figsize=(8, 6), ax=None, **kwargs
             if len(self.df.geometry) == 0:
                 return ax
 
-            edgecolor = kwargs.pop('edgecolor', 'black')
-            facecolor = kwargs.pop('facecolor', 'None')
+            edgecolor = kwargs.pop("edgecolor", "black")
+            facecolor = kwargs.pop("facecolor", "None")
             # Regular plots have zorder 0, polyplot has zorder -1, webmap has zorder -2.
             # This reflects the order we usually want these plot elements to appear in.
-            zorder = kwargs.pop('zorder', -1)
+            zorder = kwargs.pop("zorder", -1)
 
             if self.projection:
                 for geom in self.df.geometry:
                     features = ShapelyFeature([geom], ccrs.PlateCarree())
                     ax.add_feature(
-                        features, facecolor=facecolor, edgecolor=edgecolor, zorder=zorder,
-                        **kwargs
+                        features,
+                        facecolor=facecolor,
+                        edgecolor=edgecolor,
+                        zorder=zorder,
+                        **kwargs,
                     )
             else:
                 for geom in df.geometry:
                     try:  # Duck test for MultiPolygon.
-                        for subgeom in geom:
+                        for subgeom in geom.geoms:
                             feature = GeopandasPolygonPatch(
-                                subgeom, facecolor=facecolor, edgecolor=edgecolor, zorder=zorder,
-                                **kwargs
+                                subgeom,
+                                facecolor=facecolor,
+                                edgecolor=edgecolor,
+                                zorder=zorder,
+                                **kwargs,
                             )
                             ax.add_patch(feature)
                     except (TypeError, AssertionError):  # Shapely Polygon.
                         feature = GeopandasPolygonPatch(
-                            geom, facecolor=facecolor, edgecolor=edgecolor, zorder=zorder,
-                            **kwargs
+                            geom,
+                            facecolor=facecolor,
+                            edgecolor=edgecolor,
+                            zorder=zorder,
+                            **kwargs,
                         )
                         ax.add_patch(feature)
 
             return ax
 
-    plot = PolyPlot(df, figsize=figsize, ax=ax, extent=extent, projection=projection, **kwargs)
+    plot = PolyPlot(
+        df, figsize=figsize, ax=ax, extent=extent, projection=projection, **kwargs
+    )
     return plot.draw()
 
 
 def choropleth(
-    df, projection=None,
-    hue=None, cmap=None, norm=None, scheme=None,
-    legend=False, legend_kwargs=None, legend_labels=None, legend_values=None,
-    extent=None, figsize=(8, 6), ax=None, **kwargs
+    df,
+    projection=None,
+    hue=None,
+    cmap=None,
+    norm=None,
+    scheme=None,
+    legend=False,
+    legend_kwargs=None,
+    legend_labels=None,
+    legend_values=None,
+    extent=None,
+    figsize=(8, 6),
+    ax=None,
+    **kwargs,
 ):
     """
     A color-mapped area plot.
@@ -993,20 +1081,44 @@ def choropleth(
             return ax
 
     plot = ChoroplethPlot(
-        df, figsize=figsize, ax=ax, extent=extent, projection=projection,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        legend=legend, legend_values=legend_values, legend_labels=legend_labels,
-        legend_kwargs=legend_kwargs, **kwargs
+        df,
+        figsize=figsize,
+        ax=ax,
+        extent=extent,
+        projection=projection,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        legend=legend,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
+        legend_kwargs=legend_kwargs,
+        **kwargs,
     )
     return plot.draw()
 
 
 def quadtree(
-    df, projection=None, clip=None,
-    hue=None, cmap=None, norm=None, scheme=None,
-    nmax=None, nmin=None, nsig=0, agg=np.mean,
-    legend=False, legend_kwargs=None, legend_values=None, legend_labels=None,
-    extent=None, figsize=(8, 6), ax=None, **kwargs
+    df,
+    projection=None,
+    clip=None,
+    hue=None,
+    cmap=None,
+    norm=None,
+    scheme=None,
+    nmax=None,
+    nmin=None,
+    nsig=0,
+    agg=np.mean,
+    legend=False,
+    legend_kwargs=None,
+    legend_values=None,
+    legend_labels=None,
+    extent=None,
+    figsize=(8, 6),
+    ax=None,
+    **kwargs,
 ):
     """
     A choropleth with point aggregate neighborhoods.
@@ -1068,11 +1180,14 @@ def quadtree(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
-    class QuadtreePlot(Plot, QuadtreeComputeMixin, QuadtreeHueMixin, LegendMixin, ClipMixin):
+
+    class QuadtreePlot(
+        Plot, QuadtreeComputeMixin, QuadtreeHueMixin, LegendMixin, ClipMixin
+    ):
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
             self.compute_quadtree()
-            self.set_hue_values(color_kwarg='facecolor', default_color='None')
+            self.set_hue_values(color_kwarg="facecolor", default_color="None")
             self.paint_legend(supports_hue=True, supports_scale=False)
 
         def draw(self):
@@ -1105,9 +1220,7 @@ def quadtree(
 
                 if projection:
                     feature = ShapelyFeature([geom], ccrs.PlateCarree())
-                    ax.add_feature(
-                        feature, facecolor=color, **self.kwargs
-                    )
+                    ax.add_feature(feature, facecolor=color, **self.kwargs)
                 else:
                     feature = GeopandasPolygonPatch(
                         geom, facecolor=color, **self.kwargs
@@ -1117,24 +1230,48 @@ def quadtree(
             return ax
 
     plot = QuadtreePlot(
-        df, projection=projection,
+        df,
+        projection=projection,
         clip=clip,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        nmax=nmax, nmin=nmin, nsig=nsig, agg=agg,
-        legend=legend, legend_values=legend_values, legend_labels=legend_labels,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        nmax=nmax,
+        nmin=nmin,
+        nsig=nsig,
+        agg=agg,
+        legend=legend,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
         legend_kwargs=legend_kwargs,
-        extent=extent, figsize=figsize, ax=ax,
-        **kwargs
+        extent=extent,
+        figsize=figsize,
+        ax=ax,
+        **kwargs,
     )
     return plot.draw()
 
 
 def cartogram(
-    df, projection=None,
-    scale=None, limits=(0.2, 1), scale_func=None,
-    hue=None, cmap=None, norm=None, scheme=None,
-    legend=False, legend_values=None, legend_labels=None, legend_kwargs=None, legend_var=None,
-    extent=None, figsize=(8, 6), ax=None, **kwargs
+    df,
+    projection=None,
+    scale=None,
+    limits=(0.2, 1),
+    scale_func=None,
+    hue=None,
+    cmap=None,
+    norm=None,
+    scheme=None,
+    legend=False,
+    legend_values=None,
+    legend_labels=None,
+    legend_kwargs=None,
+    legend_var=None,
+    extent=None,
+    figsize=(8, 6),
+    ax=None,
+    **kwargs,
 ):
     """
     A scaling area plot.
@@ -1203,7 +1340,7 @@ def cartogram(
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
             self.set_scale_values(size_kwarg=None, default_size=None)
-            self.set_hue_values(color_kwarg='facecolor', default_color='steelblue')
+            self.set_hue_values(color_kwarg="facecolor", default_color="steelblue")
 
             # Scaling a legend marker means scaling a point, whereas scaling a cartogram
             # marker means scaling a polygon. The same scale has radically different effects
@@ -1244,13 +1381,24 @@ def cartogram(
             return ax
 
     plot = CartogramPlot(
-        df, projection=projection,
-        figsize=figsize, ax=ax, extent=extent,
-        scale=scale, limits=limits, scale_func=scale_func,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        legend=legend, legend_values=legend_values, legend_labels=legend_labels,
-        legend_kwargs=legend_kwargs, legend_var=legend_var,
-        **kwargs
+        df,
+        projection=projection,
+        figsize=figsize,
+        ax=ax,
+        extent=extent,
+        scale=scale,
+        limits=limits,
+        scale_func=scale_func,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        legend=legend,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
+        legend_kwargs=legend_kwargs,
+        legend_var=legend_var,
+        **kwargs,
     )
     return plot.draw()
 
@@ -1290,6 +1438,7 @@ def kdeplot(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class KDEPlot(Plot, HueMixin, ClipMixin):
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
@@ -1304,29 +1453,50 @@ def kdeplot(
                 sns.kdeplot(
                     x=pd.Series([p.x for p in self.df.geometry]),
                     y=pd.Series([p.y for p in self.df.geometry]),
-                    transform=ccrs.PlateCarree(), ax=ax, **self.kwargs
+                    transform=ccrs.PlateCarree(),
+                    ax=ax,
+                    **self.kwargs,
                 )
             else:
                 sns.kdeplot(
                     x=pd.Series([p.x for p in self.df.geometry]),
                     y=pd.Series([p.y for p in self.df.geometry]),
-                    ax=ax, **self.kwargs
+                    ax=ax,
+                    **self.kwargs,
                 )
             return ax
 
     plot = KDEPlot(
-        df, projection=projection, extent=extent, figsize=figsize, ax=ax, clip=clip, **kwargs
+        df,
+        projection=projection,
+        extent=extent,
+        figsize=figsize,
+        ax=ax,
+        clip=clip,
+        **kwargs,
     )
     return plot.draw()
 
 
 def sankey(
-    df, projection=None,
-    hue=None, norm=None, cmap=None, scheme=None,
-    legend=False, legend_kwargs=None, legend_labels=None, legend_values=None, legend_var=None,
-    extent=None, figsize=(8, 6),
-    scale=None, scale_func=None, limits=(1, 5),
-    ax=None, **kwargs
+    df,
+    projection=None,
+    hue=None,
+    norm=None,
+    cmap=None,
+    scheme=None,
+    legend=False,
+    legend_kwargs=None,
+    legend_labels=None,
+    legend_values=None,
+    legend_var=None,
+    extent=None,
+    figsize=(8, 6),
+    scale=None,
+    scale_func=None,
+    limits=(1, 5),
+    ax=None,
+    **kwargs,
 ):
     """
     A spatial Sankey or flow map.
@@ -1390,6 +1560,7 @@ def sankey(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class SankeyPlot(Plot, HueMixin, ScaleMixin, LegendMixin):
         def __init__(self, df, **kwargs):
             # Most markers use 'color' or 'facecolor' as their color_kwarg, and this parameter
@@ -1402,14 +1573,14 @@ def sankey(
             # This complicates keywords in the Sankey API (the only plot type so far that uses a
             # line marker). For code cleanliness, we choose to support "color" and not
             # "edgecolor", and to raise if an "edgecolor" is set.
-            if 'edgecolor' in kwargs:
+            if "edgecolor" in kwargs:
                 raise ValueError(
                     'Invalid parameter "edgecolor". To control line color, use "color".'
                 )
 
             super().__init__(df, **kwargs)
-            self.set_hue_values(color_kwarg='color', default_color='steelblue')
-            self.set_scale_values(size_kwarg='linewidth', default_size=1)
+            self.set_hue_values(color_kwarg="color", default_color="steelblue")
+            self.set_scale_values(size_kwarg="linewidth", default_size=1)
             self.paint_legend(supports_hue=True, supports_scale=True)
 
         def draw(self):
@@ -1427,21 +1598,26 @@ def sankey(
                     return shapely.geometry.LineString(geom)
                 else:
                     raise ValueError(
-                        f'df.geometry must contain LineString, MultiLineString, or MultiPoint '
-                        f'geometries, but an instance of {type(geom)} was found instead.'
+                        f"df.geometry must contain LineString, MultiLineString, or MultiPoint "
+                        f"geometries, but an instance of {type(geom)} was found instead."
                     )
+
             path_geoms = self.df.geometry.map(parse_geom)
 
-            linestyle = kwargs.pop('linestyle', None)
+            linestyle = kwargs.pop("linestyle", None)
             if linestyle is None:
-                linestyle = '-'
+                linestyle = "-"
 
             if self.projection:
                 for line, color, width in zip(path_geoms, self.colors, self.sizes):
                     feature = ShapelyFeature([line], ccrs.PlateCarree())
                     ax.add_feature(
-                        feature, linestyle=linestyle, linewidth=width, edgecolor=color,
-                        facecolor='None', **self.kwargs
+                        feature,
+                        linestyle=linestyle,
+                        linewidth=width,
+                        edgecolor=color,
+                        facecolor="None",
+                        **self.kwargs,
                     )
             else:
                 for path, color, width in zip(path_geoms, self.colors, self.sizes):
@@ -1451,8 +1627,10 @@ def sankey(
                         line = mpl.lines.Line2D(
                             [coord[0] for coord in path.coords],
                             [coord[1] for coord in path.coords],
-                            linestyle=linestyle, linewidth=width, color=color,
-                            **self.kwargs
+                            linestyle=linestyle,
+                            linewidth=width,
+                            color=color,
+                            **self.kwargs,
                         )
                         ax.add_line(line)
                     except NotImplementedError:  # MultiLineString
@@ -1460,28 +1638,54 @@ def sankey(
                             line = mpl.lines.Line2D(
                                 [coord[0] for coord in line.coords],
                                 [coord[1] for coord in line.coords],
-                                linestyle=linestyle, linewidth=width, color=color,
-                                **self.kwargs
+                                linestyle=linestyle,
+                                linewidth=width,
+                                color=color,
+                                **self.kwargs,
                             )
                             ax.add_line(line)
             return ax
 
     plot = SankeyPlot(
-        df, figsize=figsize, ax=ax, extent=extent, projection=projection,
-        scale=scale, limits=limits, scale_func=scale_func,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        legend=legend, legend_values=legend_values, legend_labels=legend_labels,
-        legend_kwargs=legend_kwargs, legend_var=legend_var,
-        **kwargs
+        df,
+        figsize=figsize,
+        ax=ax,
+        extent=extent,
+        projection=projection,
+        scale=scale,
+        limits=limits,
+        scale_func=scale_func,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        legend=legend,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
+        legend_kwargs=legend_kwargs,
+        legend_var=legend_var,
+        **kwargs,
     )
     return plot.draw()
 
 
 def voronoi(
-    df, projection=None, clip=None,
-    hue=None, cmap=None, norm=None, scheme=None,
-    legend=False, legend_kwargs=None, legend_labels=None, legend_values=None,
-    extent=None, edgecolor='black', figsize=(8, 6), ax=None, **kwargs
+    df,
+    projection=None,
+    clip=None,
+    hue=None,
+    cmap=None,
+    norm=None,
+    scheme=None,
+    legend=False,
+    legend_kwargs=None,
+    legend_labels=None,
+    legend_values=None,
+    extent=None,
+    edgecolor="black",
+    figsize=(8, 6),
+    ax=None,
+    **kwargs,
 ):
     """
     A geospatial Voronoi diagram.
@@ -1545,10 +1749,11 @@ def voronoi(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class VoronoiPlot(Plot, HueMixin, LegendMixin, ClipMixin):
         def __init__(self, df, **kwargs):
             super().__init__(df, **kwargs)
-            self.set_hue_values(color_kwarg='facecolor', default_color='None')
+            self.set_hue_values(color_kwarg="facecolor", default_color="None")
             self.paint_legend(supports_hue=True, supports_scale=False)
 
         def draw(self):
@@ -1564,10 +1769,14 @@ def voronoi(
             # index-naive (e.g. index-based) manner is to provide a numpy array instead of a
             # GeoSeries as input.
             self.df = self.df.assign(
-                geometry=self.set_clip(gpd.GeoDataFrame(geometry=geoms)).to_numpy()[:, 0]
+                geometry=self.set_clip(gpd.GeoDataFrame(geometry=geoms)).to_numpy()[
+                    :, 0
+                ]
             )
             for color, geom in zip(self.colors, self.df.geometry):
-                if geom.is_empty:  # do not plot data points that return empty due to clipping
+                if (
+                    geom.is_empty
+                ):  # do not plot data points that return empty due to clipping
                     continue
 
                 if self.projection:
@@ -1584,19 +1793,34 @@ def voronoi(
             return ax
 
     plot = VoronoiPlot(
-        df, figsize=figsize, ax=ax, extent=extent, projection=projection,
-        hue=hue, scheme=scheme, cmap=cmap, norm=norm,
-        legend=legend, legend_values=legend_values, legend_labels=legend_labels,
+        df,
+        figsize=figsize,
+        ax=ax,
+        extent=extent,
+        projection=projection,
+        hue=hue,
+        scheme=scheme,
+        cmap=cmap,
+        norm=norm,
+        legend=legend,
+        legend_values=legend_values,
+        legend_labels=legend_labels,
         legend_kwargs=legend_kwargs,
         clip=clip,
-        **kwargs
+        **kwargs,
     )
     return plot.draw()
 
 
 def webmap(
-    df, extent=None, figsize=(8, 6), projection=None, zoom=None,
-    provider=ctx.providers.OpenStreetMap.Mapnik, ax=None, **kwargs
+    df,
+    extent=None,
+    figsize=(8, 6),
+    projection=None,
+    zoom=None,
+    provider=ctx.providers.OpenStreetMap.Mapnik,
+    ax=None,
+    **kwargs,
 ):
     """
     A webmap.
@@ -1636,16 +1860,17 @@ def webmap(
     ``AxesSubplot`` or ``GeoAxesSubplot``
         The plot Axes.
     """
+
     class WebmapPlot(Plot):
         # webmap is restricted to the WebMercator projection, which requires special Axes and
         # projection initialization rules to get right.
         def __init__(self, df, **kwargs):
             if isinstance(ax, GeoAxesSubplot):
                 proj_name = ax.projection.__class__.__name__
-                if proj_name != 'WebMercator':
+                if proj_name != "WebMercator":
                     raise ValueError(
                         f'"webmap" is only compatible with the "WebMercator" projection, but '
-                        f'the input Axes is in the {proj_name!r} projection instead. To fix, '
+                        f"the input Axes is in the {proj_name!r} projection instead. To fix, "
                         f'pass "projection=gcrs.WebMercator()" to the Axes initializer.'
                     )
                 super().__init__(df, projection=projection, **kwargs)
@@ -1653,30 +1878,34 @@ def webmap(
                 raise ValueError(
                     '"webmap" is only compatible with the "WebMercator" projection, but '
                     'the input Axes is unprojected. To fix, pass "projection=gcrs.WebMercator()" '
-                    'to the Axes initializer.'
+                    "to the Axes initializer."
                 )
             elif ax is None and projection is None:
                 warnings.warn(
                     '"webmap" is only compatible with the "WebMercator" projection, but the '
                     'input projection is unspecified. Reprojecting the data to "WebMercator" '
-                    'automatically. To suppress this warning, set '
+                    "automatically. To suppress this warning, set "
                     '"projection=gcrs.WebMercator()" explicitly.'
                 )
                 super().__init__(df, projection=gcrs.WebMercator(), **kwargs)
-            elif (ax is None
-                  and projection is not None
-                  and projection.__class__.__name__ != 'WebMercator'):
+            elif (
+                ax is None
+                and projection is not None
+                and projection.__class__.__name__ != "WebMercator"
+            ):
                 raise ValueError(
                     f'"webmap" is only compatible with the "WebMercator" projection, but '
-                    f'the input projection is set to {projection.__class__.__name__!r}. Set '
-                    f'projection=gcrs.WebMercator() instead.'
+                    f"the input projection is set to {projection.__class__.__name__!r}. Set "
+                    f"projection=gcrs.WebMercator() instead."
                 )
-            elif (ax is None
-                  and projection is not None
-                  and projection.__class__.__name__ == 'WebMercator'):
+            elif (
+                ax is None
+                and projection is not None
+                and projection.__class__.__name__ == "WebMercator"
+            ):
                 super().__init__(df, projection=projection, **kwargs)
 
-            zoom = kwargs.pop('zoom', None)
+            zoom = kwargs.pop("zoom", None)
 
             # The plot extent is a well-defined function of plot data geometry and user input to
             # the "extent" parameter, except in the case of numerical instability or invalid user
@@ -1688,7 +1917,11 @@ def webmap(
             # For this reason we (1) recalculate "good case" plot extent here, instead of saving
             # the value to an init variable and (2) accept that this calculation is potentially
             # incorrect in edge cases.
-            extent = relax_bounds(*self.df.total_bounds) if self.extent is None else self.extent
+            extent = (
+                relax_bounds(*self.df.total_bounds)
+                if self.extent is None
+                else self.extent
+            )
 
             if zoom is None:
                 zoom = ctx.tile._calculate_zoom(*extent)
@@ -1697,19 +1930,19 @@ def webmap(
                 if howmany > 100:
                     better_zoom_level = ctx.tile._calculate_zoom(*extent)
                     warnings.warn(
-                        f'Generating a webmap at zoom level {zoom} for the given plot extent '
-                        f'requires downloading {howmany} individual tiles. This slows down '
-                        f'plot generation and places additional pressure on the tile '
-                        f'provider\'s server, which many deny your request when placed under '
+                        f"Generating a webmap at zoom level {zoom} for the given plot extent "
+                        f"requires downloading {howmany} individual tiles. This slows down "
+                        f"plot generation and places additional pressure on the tile "
+                        f"provider's server, which many deny your request when placed under "
                         f'high load or high request volume. Consider setting "zoom" to '
-                        f'{better_zoom_level} instead. This is the recommended zoom level for '
-                        f'the given plot extent.'
+                        f"{better_zoom_level} instead. This is the recommended zoom level for "
+                        f"the given plot extent."
                     )
             self.zoom = zoom
             self._webmap_extent = extent
             # Regular plots have zorder 0, polyplot has zorder -1, webmap has zorder -2.
             # This reflects the order we usually want these plot elements to appear in.
-            self.zorder = kwargs.pop('zorder', -2)
+            self.zorder = kwargs.pop("zorder", -2)
 
         def draw(self):
             ax = plot.ax
@@ -1717,10 +1950,11 @@ def webmap(
                 return ax
 
             basemap, extent = ctx.bounds2img(
-                *self._webmap_extent, zoom=self.zoom,
-                source=provider, ll=True
+                *self._webmap_extent, zoom=self.zoom, source=provider, ll=True
             )
-            ax.imshow(basemap, extent=extent, interpolation='bilinear', zorder=self.zorder)
+            ax.imshow(
+                basemap, extent=extent, interpolation="bilinear", zorder=self.zorder
+            )
             return ax
 
     plot = WebmapPlot(df, figsize=figsize, ax=ax, extent=extent, zoom=zoom, **kwargs)
@@ -1730,6 +1964,7 @@ def webmap(
 ##################
 # HELPER METHODS #
 ##################
+
 
 def _to_geom_geoseries(df, var, var_name):
     if isinstance(var, gpd.GeoDataFrame):
@@ -1803,10 +2038,12 @@ def relax_bounds(xmin, ymin, xmax, ymax):
     """
     window_resize_val_x = 0.1 * (xmax - xmin)
     window_resize_val_y = 0.1 * (ymax - ymin)
-    extrema = np.array([
-        np.max([-180, xmin - window_resize_val_x]),
-        np.max([-90, ymin - window_resize_val_y]),
-        np.min([180, xmax + window_resize_val_x]),
-        np.min([90, ymax + window_resize_val_y])
-    ])
+    extrema = np.array(
+        [
+            np.max([-180, xmin - window_resize_val_x]),
+            np.max([-90, ymin - window_resize_val_y]),
+            np.min([180, xmax + window_resize_val_x]),
+            np.min([90, ymax + window_resize_val_y]),
+        ]
+    )
     return extrema
